@@ -162,7 +162,7 @@ if __name__ == "__main__":
             val_errors.extend(mse.numpy())
     
     # 计算并保存上下限阈值
-    threshold_high = 1.0*np.percentile(val_errors, 99.95554)  # 上限阈值(89%分位数)
+    threshold_high = 1.0*np.percentile(val_errors, 95)  # 上限阈值(89%分位数)
     threshold_low = np.percentile(val_errors, 30)    # 下限阈值(30%分位数)
     print (f"threshold_high:", threshold_high)
     # 保存双阈值到config.yaml
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     if "lstm" not in config:
         config["lstm"] = {}
     config["lstm"]["THRESHOLD_HIGH"] = float(threshold_high*1)
-    config["lstm"]["THRESHOLD_LOW"] = float(threshold_low)
+   
     with open("config.yaml", "w") as f:
         yaml.dump(config, f, default_flow_style=False)
     
@@ -208,7 +208,7 @@ if __name__ == "__main__":
         "Recall": recall,
         "F1": f1_score
     }
-    save_metrics_to_csv("LSTM", metrics)
+    #save_metrics_to_csv("LSTM", metrics)
     # 打印混淆矩阵
     print("\n混淆矩阵:")
     print("          Predicted")

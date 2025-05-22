@@ -1,0 +1,16 @@
+dgl==1.1.0
+einops==0.8.1
+joblib==1.4.2
+matplotlib==3.10.3
+numpy==2.2.6
+pandas==2.2.3
+psutil==7.0.0
+ptflops==0.7.4
+PyYAML==6.0.2
+PyYAML==6.0.2
+reformer_pytorch==1.4.4
+scikit_learn==1.6.1
+scipy==1.15.3
+sktime==0.37.0
+torch==2.4.0
+tqdm==4.67.1

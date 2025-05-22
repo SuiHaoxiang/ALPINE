@@ -224,11 +224,10 @@ if __name__ == "__main__":
     print(f"验证集分数范围: min={val_scores.min().item():.4f}, max={val_scores.max().item():.4f}")
     
     # 计算全局阈值
-    global_threshold = 1.0*np.percentile(val_scores.numpy(),95
-                                         )
-    global_threshold_1 =1.2*global_threshold
-     # 计算正常阈值
-    normal_threshold = 1*np.percentile(val_scores.numpy(), 20)
+    global_threshold = 1.0*np.percentile(val_scores.numpy(),80)
+    global_threshold_1 = 1.0*global_threshold
+    # 计算正常阈值
+    normal_threshold = 0.93*np.percentile(val_scores.numpy(), 30)
     print("global_threshold:", global_threshold)
     print("normal_threshold:", normal_threshold)
     
@@ -275,7 +274,7 @@ if __name__ == "__main__":
         "Recall": recall,
         "F1": f1
     }
-    save_metrics_to_csv("Sparse-iForest", metrics)
+   # save_metrics_to_csv("Sparse-iForest", metrics)
 
     # 打印混淆矩阵
     cm = confusion_matrix(true_labels, final_predictions)

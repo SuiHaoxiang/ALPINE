@@ -1,0 +1,1 @@
+python ../autoencoder.py

@@ -1,0 +1,15 @@
+python ../iTransformer/run.py --exp_name anomaly --is_training 1 \
+--model_id FD_anomaly \
+--model iTransformer \
+--data FD \
+--root_path ../../dataset/FD/ \
+--data_path train.csv \
+--target label \
+--features M \
+--seq_len 96 \
+--label_len 48 \
+--pred_len 96 \
+--enc_in 3 \
+--dec_in 3 \
+--c_out 1 \
+--anomaly_threshold 0.1

@@ -245,46 +245,5 @@ params = {
     "GLOBAL_HIGH_THRESHOLD": GLOBAL_HIGH_THRESHOLD,
     "GLOBAL_LOW_THRESHOLD": GLOBAL_LOW_THRESHOLD
 }
-save_metrics_to_csv("Hybrid", metrics_hyb)
+#save_metrics_to_csv("Hybrid", metrics_hyb)
 
-
-
-os.makedirs('plots', exist_ok=True)
-
-plt.figure(figsize=(12, 12))
-
-# 计算95%分位数
-sif_scores = [sif_model.anomaly_score(torch.tensor(scaler.transform(test_df[shared_config["features"]].iloc[i].values.reshape(1, -1)), dtype=torch.float32)).item() 
-              for i in range(TIME_WINDOW, len(test_df))]
-sif_percentile = np.percentile(sif_scores, 95)
-
-valid_lstm_scores = lstm_scores[TIME_WINDOW:]
-lstm_percentile = np.percentile(valid_lstm_scores[valid_lstm_scores > 0], 80)
-
-# 子图1: Sparse-iForest分数分布
-plt.subplot(2, 1, 1)
-plt.hist(sif_scores, bins=50, alpha=0.7)
-plt.axvline(x=GLOBAL_HIGH_THRESHOLD, color='r', linestyle='--', label='High Threshold')
-plt.axvline(x=GLOBAL_LOW_THRESHOLD, color='g', linestyle='--', label='Low Threshold')
-plt.axvline(x=sif_percentile, color='m', linestyle=':', label='80th Percentile')
-plt.title('Sparse-iForest Anomaly Score Distribution')
-plt.xlabel('Anomaly Score')
-plt.ylabel('Count')
-plt.legend()
-
-# 子图2: LSTM MSE分数分布
-plt.subplot(2, 1, 2)
-plt.hist(valid_lstm_scores[valid_lstm_scores > 0], bins=50, alpha=0.7)
-plt.axvline(x=LSTM_TH, color='b', linestyle='--', label='LSTM Threshold')
-plt.axvline(x=lstm_percentile, color='c', linestyle=':', label='95th Percentile')
-plt.title('LSTM MSE Score Distribution')
-plt.xlabel('MSE Score')
-plt.ylabel('Count')
-plt.legend()
-
-plt.tight_layout()
-plt.savefig('plots/model_scores_comparison.png')
-plt.close()
-
-print("\n可视化分析图表已保存到plots目录:")
-print("- model_scores_comparison.png: 模型分数对比图")

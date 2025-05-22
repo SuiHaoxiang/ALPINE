@@ -28,3 +28,12 @@ svm:
   gamma: auto
   kernel: rbf
   nu: 0.6
+shared:
+  TIME_WINDOW: 10
+  data:
+    test_data: ../dataset/FD/test.csv
+    train_data: ../dataset/FD/train.csv
+  features:
+  - RSSI
+  - Link Quality
+  - Ping Delay

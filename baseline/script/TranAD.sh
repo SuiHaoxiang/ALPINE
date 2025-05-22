@@ -1,0 +1,1 @@
+python3 ../TranAD/main.py --model TranAD --dataset FD --retrain

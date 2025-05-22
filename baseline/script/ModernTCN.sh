@@ -1,0 +1,22 @@
+# python run.py --data FD --task_name anomaly_detection --root_path ../dataset/data_FD/ --batch_size 32 --seq_len 100 --is_training 1 --model_id FD_experiment --model ModernTCN
+python ../ModernTCN/run.py \
+  --task_name anomaly_detection \
+  --is_training 1 \
+  --model ModernTCN \
+  --data FD \
+  --root_path ../../dataset/FD/ \
+  --model_id FD_experiment \
+  --seq_len 100 \
+  --anomaly_ratio 0.1 \
+  --batch_size 128 \
+  --train_epochs 5 \
+  --learning_rate 0.001 \
+  --features M \
+  --dims 256 \
+  --num_blocks 1 \
+  --large_size 31 \
+  --small_size 5 \
+  --ffn_ratio 2 \
+  --patch_size 16 \
+  --patch_stride 8 \
+  --use_multi_scale True

@@ -1,0 +1,1 @@
+python3 ../TranAD/main.py --model LSTM_AD --dataset FD --retrain

@@ -1,41 +1,27 @@
-autoencoder:
-  ae_encoding_dim: 8
-  ae_epochs: 100
-  ae_lr: 0.001
-  ae_threshold_quantile: 0.95
-  model_path: best_autoencoder_model.pth
 hyb:
-  features:
-  - value
   models:
     lstm_model: best_model.pth
     sif_model: sparse_isolation_forest_model.pkl
 lstm:
-  BATCH_SIZE: 32
+  BATCH_SIZE: 64
   EPOCHS: 200
-  HIDDEN_SIZE: 3
+  HIDDEN_SIZE: 4
   LR: 0.01
-  POT_THRESHOLD: 1.2672669219970703
-  THRESHOLD_HIGH: 0.0013107570121064782
-  THRESHOLD_LOW: 6.76728243182879e-06
+  THRESHOLD_HIGH: 0.4559980034828186
 shared:
   TIME_WINDOW: 10
   data:
-    test_data: /home/code/lstm_if_one_dim/final/dataset/UCR/csv_files/136/test.csv
-    train_data: /home/code/lstm_if_one_dim/final/dataset/UCR/csv_files/136/train.csv
+    test_data: ../dataset/FD/test.csv
+    train_data: ../dataset/FD/train.csv
   features:
-  - value
+  - RSSI
+  - Link Quality
+  - Ping Delay
 spa:
-  GLOBAL_THRESHOLD: 0.7610469726675606
-  GLOBAL_original_THRESHOLD: 0.6342058105563005
-  NORMAL_THRESHOLD: 0.45325938441694197
-  ORIGINAL_NORMAL_THRESHOLD: -0.5480686249751155
-  ORIGINAL_THRESHOLD: 4.249814872491792
-  max_depth: 6
+  GLOBAL_THRESHOLD: 0.6028045095423143
+  GLOBAL_original_THRESHOLD: 0.6028045095423143
+  NORMAL_THRESHOLD: 0.4749808761904588
+  max_depth: 5
   min_samples_split: 2
   n_trees: 25
   subsample_size: 128
-svm:
-  gamma: auto
-  kernel: rbf
-  nu: 0.6
