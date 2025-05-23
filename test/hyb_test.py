@@ -82,7 +82,7 @@ def main():
             (end_time - start_time) / (len(test_features) - time_window))
     
     avg_time = np.mean(test_results['per_sample_times']) * 1000
-    # 注意：混合模型包含Sparse-iForest和LSTM两阶段判断，时间会比其他单一模型长
+
     print(f"推理时间: {avg_time:.6f} ms/样本 (混合模型)")
 
 if __name__ == "__main__":

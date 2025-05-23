@@ -1,49 +1,49 @@
 import numpy as np
 
 class RiskCalculator:
-    """综合风险计算器，结合信道风险和语义风险"""
+    """Integrated risk calculator combining channel risk and semantic risk"""
     
     def __init__(self, gamma1=0.9, gamma2=0.1):
-        """初始化风险计算器
+        """Initialize risk calculator
         
         Args:
-            gamma1 (float): 信道风险权重 (默认0.5)
-            gamma2 (float): 语义风险权重 (默认0.5)
+            gamma1 (float): Channel risk weight (default 0.5)
+            gamma2 (float): Semantic risk weight (default 0.5)
         """
         self.gamma1 = gamma1
         self.gamma2 = gamma2
     
     def sigmoid(self, x):
-        """Sigmoid归一化函数
+        """Sigmoid normalization function
         
         Args:
-            x (float): 输入值
+            x (float): Input value
             
         Returns:
-            float: 归一化后的值(0-1)
+            float: Normalized value (0-1)
         """
         return 1 / (1 + np.exp(-x))
     
     def calculate_combined_risk(self, r_channel, r_semantic):
-        """计算综合风险评分 R_risk = σ(γ1*R_channel + γ2*R_semantic)
+        """Calculate combined risk score R_risk = σ(γ1*R_channel + γ2*R_semantic)
         
         Args:
-            r_channel (float): 信道风险值
-            r_semantic (float): 语义风险值
+            r_channel (float): Channel risk value
+            r_semantic (float): Semantic risk value
             
         Returns:
-            float: 综合风险评分(0-1)
+            float: Combined risk score (0-1)
         """
-        # 计算加权和并应用Sigmoid归一化
+        # Calculate weighted sum and apply sigmoid normalization
         weighted_sum = self.gamma1 * r_channel + self.gamma2 * r_semantic
         return self.sigmoid(weighted_sum)
     
     def update_weights(self, gamma1, gamma2):
-        """更新权重参数
+        """Update weight parameters
         
         Args:
-            gamma1 (float): 新的信道风险权重
-            gamma2 (float): 新的语义风险权重
+            gamma1 (float): New channel risk weight
+            gamma2 (float): New semantic risk weight
         """
         self.gamma1 = gamma1
         self.gamma2 = gamma2

@@ -52,7 +52,7 @@ class ModernTCN_3D(nn.Module):
         self.task_name = configs.task_name
         self.dims = configs.dims
         self.dw_dims = configs.dw_dims
-        # 动态设置输入通道数
+        # Dynamically set input channels
         if hasattr(configs, 'actual_enc_in'):
             self.nvars = configs.actual_enc_in
         else:
@@ -64,9 +64,9 @@ class ModernTCN_3D(nn.Module):
             self.revin_layer = RevIN(self.nvars, affine=configs.affine, 
                                    subtract_last=configs.subtract_last)
 
-        # 动态设置stem层维度
+        # Dynamically set stem layer dimensions
         self.stem = nn.Conv1d(
-            in_channels=self.nvars,  # 使用实际输入通道数
+            in_channels=self.nvars,  # Use actual input channels
             out_channels=self.dims[0], 
             kernel_size=1,
             bias=False

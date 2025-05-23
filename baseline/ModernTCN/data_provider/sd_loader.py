@@ -12,7 +12,7 @@ class SD_Loader:
         self.scaler = StandardScaler()
         self.features = ['signal_strength', 'transmit_rate', 'ping_latency']
         
-        # 在初始化时预先fit scaler
+        # Pre-fit scaler during initialization
         if flag == 'train':
             path = os.path.join(self.root_path, 'train.csv')
             df = pd.read_csv(path)
@@ -24,11 +24,11 @@ class SD_Loader:
             path = os.path.join(self.root_path, 'train.csv')
             df = pd.read_csv(path)
             df = df.dropna()
-            # 训练时取前80%作为训练集
+            # Use first 80% as training set
             train_size = int(0.8 * len(df))
             data = df[self.features].values[:train_size]
             return data, None
-        elif flag == 'val':  # 验证集用训练集的后20%
+        elif flag == 'val':  # Use last 20% as validation set
             path = os.path.join(self.root_path, 'train.csv')
             df = pd.read_csv(path)
             df = df.dropna()
@@ -44,8 +44,8 @@ class SD_Loader:
             return data, labels
             
     def _get_freq(self, data):
-        # 计算采样频率(Hz)
-        return 0.1  # 10秒间隔=0.1Hz
+        # Calculate sampling frequency (Hz)
+        return 0.1  # 10 second interval = 0.1Hz
         
     def __len__(self):
         data, _ = self._read_data(self.flag)
@@ -54,19 +54,19 @@ class SD_Loader:
     def __getitem__(self, index):
         data, labels = self._read_data(self.flag)
         
-        # 确保scaler已被正确初始化
+        # Ensure scaler is properly initialized
         if self.flag == 'train':
             data = self.scaler.fit_transform(data)
         else:
             if not hasattr(self.scaler, 'mean_'):
-                # 如果验证/测试时scaler未初始化，使用训练数据初始化
+                # If scaler not initialized for val/test, initialize with training data
                 train_path = os.path.join(self.root_path, 'train.csv')
                 train_df = pd.read_csv(train_path)
                 train_data = train_df[self.features].values
                 self.scaler.fit(train_data)
             data = self.scaler.transform(data)
         
-        # 创建滑动窗口样本
+        # Create sliding window samples
         start_idx = index
         end_idx = start_idx + self.win_size
         if end_idx > len(data):
@@ -76,7 +76,7 @@ class SD_Loader:
         window_data = data[start_idx:end_idx]
         window_label = labels[start_idx:end_idx] if labels is not None else None
         
-        # 转换为tensor
+        # Convert to tensor
         window_data = torch.FloatTensor(window_data)
         if window_label is not None:
             window_label = torch.FloatTensor(window_label)

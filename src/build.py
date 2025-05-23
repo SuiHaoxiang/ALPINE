@@ -7,36 +7,36 @@ import psutil
 import torch
 import torch.nn as nn
 class Config:
-    STATE_DIM    = 1     # 状态维度 (风险值 rrisk)
-    ACTION_DIM   = 1     # 动作维度 (隐私预算 epsilon)
-    EPSILON_MIN  = 1.0   # 最小隐私预算
-    EPSILON_MAX  = 5.0   # 最大隐私预算
-    ALPHA        = 5 # 隐私增益权重
-    BETA         = 20  # 效用损失权重
-    GAMMA        = 0.99  # 折扣因子
-    TAU          = 0.005 # 软更新系数
-    ACTOR_LR     = 1e-4  # Actor 学习率
-    CRITIC_LR    = 1e-3  # Critic 学习率
+    STATE_DIM    = 1     # State dimension (risk value rrisk)
+    ACTION_DIM   = 1     # Action dimension (privacy budget epsilon)
+    EPSILON_MIN  = 1.0   # Minimum privacy budget
+    EPSILON_MAX  = 5.0   # Maximum privacy budget
+    ALPHA        = 5     # Privacy gain weight
+    BETA         = 20    # Utility loss weight
+    GAMMA        = 0.99  # Discount factor
+    TAU          = 0.005 # Soft update coefficient
+    ACTOR_LR     = 1e-4  # Actor learning rate
+    CRITIC_LR    = 1e-3  # Critic learning rate
     BUFFER_SIZE  = 100000
     BATCH_SIZE   = 64
-    OU_THETA     = 0.2   # OU 噪声参数
-    OU_SIGMA     = 0.5   # OU 噪声强度
+    OU_THETA     = 0.2   # OU noise parameter
+    OU_SIGMA     = 0.5   # OU noise intensity
 
-    # 隐私增益超参数
-    PRIV_KAPPA   = 5.0  # Logistic 陡峭度
-    PRIV_S0      = 0.8   # Logistic 中心点
-    PRIV_DELTA   = 0.7   # 预算幂次惩罚
+    # Privacy gain hyperparameters
+    PRIV_KAPPA   = 5.0  # Logistic steepness
+    PRIV_S0      = 0.8   # Logistic center point
+    PRIV_DELTA   = 0.7   # Budget power penalty
 
-    # 效用损失超参数
-    UTIL_RHO     = 0.5   # 风险耦合系数
-    UTIL_SIGMA0  = 1.0   # 噪声基准标准差
+    # Utility loss hyperparameters
+    UTIL_RHO     = 0.5   # Risk coupling coefficient
+    UTIL_SIGMA0  = 1.0   # Noise baseline standard deviation
 
-    # 非线性平滑状态转移超参数
-    TRANS_ETA    = 0.2   # 平滑步长
-    TRANS_GAMMA  = 2.0   # 幂次
+    # Nonlinear smooth state transition hyperparameters
+    TRANS_ETA    = 0.2   # Smoothing step size
+    TRANS_GAMMA  = 2.0   # Power term
 
 
-# ---------------------- 加载Actor模型 ----------------------
+# ---------------------- Load Actor Model ----------------------
 class Actor(nn.Module):
     def __init__(self):
         super().__init__()
@@ -48,7 +48,7 @@ class Actor(nn.Module):
             nn.LayerNorm(64),
             nn.ELU(),
             nn.Linear(64, Config.ACTION_DIM),
-            nn.Tanh()  # 输出范围[-1,1]
+            nn.Tanh()  # Output range [-1,1]
         )
     
     def forward(self, state):
@@ -60,7 +60,7 @@ actor = Actor()
 actor.load_state_dict(torch.load("actor_model.pth"))
 actor.eval()
 
-# ---------------------- 全局配置 ----------------------
+# ---------------------- Global Configuration ----------------------
 DELTA = 1e-6
 C = np.sqrt(2 * np.log(1.25 / DELTA))
 delta_f = 1.0
@@ -82,7 +82,7 @@ SENSITIVITIES = {
     "humidity":    1.3696
 }
 
-# ---------------------- 加载与预处理 ----------------------
+# ---------------------- Loading and Preprocessing ----------------------
 df = pd.read_csv(DATA_PATH)
 n90 = int(len(df) * TRAIN_RATIO)
 orig90 = df[FEATURES].iloc[:n90].copy()
@@ -92,7 +92,7 @@ orig_means = orig90.mean()
 orig_stds  = orig90.std(ddof=1)
 test_stds  = test10.std(ddof=1)
 
-# ---------------------- 结果容器 ----------------------
+# ---------------------- Result Containers ----------------------
 records_sigma   = []
 records_wass    = []
 records_anomaly = []
@@ -101,9 +101,9 @@ records_mem     = []
 process = psutil.Process(os.getpid())
 mem_before = process.memory_info().rss
 
-# ---------------------- 主循环 ----------------------
+# ---------------------- Main Loop ----------------------
 for r in R_risk:
-    # 使用Actor模型获得 epsilon
+    # Get epsilon from Actor model
     with torch.no_grad():
         eps = actor(torch.tensor([[r]], dtype=torch.float32)).item()
 
@@ -134,7 +134,7 @@ for r in R_risk:
         hi = orig_means[feat] + 3 * orig_stds[feat]
         row_anomaly[feat] = np.mean((noised_feat < lo) | (noised_feat > hi))
 
-    # 记录内存占用
+    # Record memory usage
     mem_after = process.memory_info().rss
     row_mem = {"risk": r, "rss_bytes": mem_after - mem_before}
     records_mem.append(row_mem)
@@ -143,13 +143,13 @@ for r in R_risk:
     records_wass.append(row_wass)
     records_anomaly.append(row_anomaly)
 
-# ---------------------- 转为 DataFrame ----------------------
+# ---------------------- Convert to DataFrame ----------------------
 df_sigma   = pd.DataFrame(records_sigma)
 df_wass    = pd.DataFrame(records_wass)
 df_anomaly = pd.DataFrame(records_anomaly)
 df_mem     = pd.DataFrame(records_mem)
 
-# ---------------------- 可视化函数 ----------------------
+# ---------------------- Visualization Functions ----------------------
 def plot_metric(df, y_label, fname, ylim=None):
     plt.figure(figsize=(8,5))
     for feat in FEATURES:
@@ -171,12 +171,11 @@ plot_metric(df_sigma,   "Noise Std Dev σ_noise",   "noise_sigma_vs_risk.png")
 plot_metric(df_wass,    "Wasserstein/Std",         "wass_vs_risk.png",    ylim=(1.5,3.5))
 plot_metric(df_anomaly, "Anomaly Ratio",           "anomaly_vs_risk.png", ylim=(0,0.2))
 
-# ---------------------- 保存 CSV ----------------------
+# ---------------------- Save CSV Files ----------------------
 df_sigma.to_csv(os.path.join(OUTPUT_DIR, "sigma_dp.csv"), index=False)
 df_wass.to_csv(os.path.join(OUTPUT_DIR, "wass_dp.csv"), index=False)
 df_anomaly.to_csv(os.path.join(OUTPUT_DIR, "anomaly_dp.csv"), index=False)
 df_mem.to_csv(os.path.join(OUTPUT_DIR, "memory_usage.csv"), index=False)
 
-# ---------------------- 打印内存信息 ----------------------
+# ---------------------- Print Memory Info ----------------------
 print("Memory usage delta (RSS) per risk level saved to memory_usage.csv")
-

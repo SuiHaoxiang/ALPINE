@@ -31,7 +31,7 @@ def load_dataset(dataset):
     if not os.path.exists(folder):
         raise Exception('Processed Data not found.')
 
-    # 设置前缀映射
+    # Set prefix mapping
     prefix_map = {
         'SMD': 'machine-1-1_',
         'SMAP': 'P-1_',
@@ -44,31 +44,31 @@ def load_dataset(dataset):
 
     prefix = prefix_map.get(dataset, '')
 
-    # 加载训练集
+    # Load training set
     train_file = os.path.join(folder, f'{prefix}train.npy')
     train_data = np.load(train_file)
     train_data = np.where(np.isnan(train_data), np.nanmean(train_data, axis=0), train_data)
     train_data = scaler.fit_transform(train_data)
 
-    # 加载测试集
+    # Load test set
     test_file = os.path.join(folder, f'{prefix}test.npy')
     test_data = np.load(test_file)
     test_data = np.where(np.isnan(test_data), np.nanmean(test_data, axis=0), test_data)
     test_data = scaler.transform(test_data)
 
-    # 加载标签
+    # Load labels
     labels_file = os.path.join(folder, f'{prefix}labels.npy')
     labels = np.load(labels_file)
 
-    # 可选裁剪
+    # Optional cropping
     if args.less:
         train_data = cut_array(0.2, train_data)
 
-    # 转换为 DataLoader
+    # Convert to DataLoader
     train_loader = DataLoader(train_data, batch_size=train_data.shape[0])
     test_loader = DataLoader(test_data, batch_size=test_data.shape[0])
 
-    # 打印数据基本信息
+    # Print basic data info
     print(f"NaN values: {np.isnan(test_data).sum()}")
     print(f"Zero values: {(test_data == 0).sum()}")
     print(f"Data stats - Min: {np.min(test_data)}, Max: {np.max(test_data)}, Mean: {np.mean(test_data)}")
@@ -316,64 +316,7 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training = True):
 		y_pred = model(data)
 		loss = l(y_pred, data)
 		if training:
-			tqdm.write(f'Epoch {epoch},\tMSE = {loss}')
-			optimizer.zero_grad()
-			loss.backward()
-			optimizer.step()
-			scheduler.step()
+			tqdm.write(f'Epoch {epoch},\tLoss = {loss.item()}')
 			return loss.item(), optimizer.param_groups[0]['lr']
 		else:
-			return loss.detach().numpy(), y_pred.detach().numpy()
-
-if __name__ == '__main__':
-	train_loader, test_loader, labels = load_dataset(args.dataset)
-	if args.model in ['MERLIN']:
-		eval(f'run_{args.model.lower()}(test_loader, labels, args.dataset)')
-	model, optimizer, scheduler, epoch, accuracy_list = load_model(args.model, labels.shape[1])
-
-	## Prepare data
-	trainD, testD = next(iter(train_loader)), next(iter(test_loader))
-	trainO, testO = trainD, testD
-	if model.name in ['Attention', 'DAGMM', 'USAD', 'MSCRED', 'CAE_M', 'GDN', 'MTAD_GAT', 'MAD_GAN'] or 'TranAD' in model.name: 
-		trainD, testD = convert_to_windows(trainD, model), convert_to_windows(testD, model)
-
-	### Training phase
-	if not args.test:
-		print(f'{color.HEADER}Training {args.model} on {args.dataset}{color.ENDC}')
-		num_epochs = 5; e = epoch + 1; start = time()
-		for e in tqdm(list(range(epoch+1, epoch+num_epochs+1))):
-			lossT, lr = backprop(e, model, trainD, trainO, optimizer, scheduler)
-			accuracy_list.append((lossT, lr))
-		print(color.BOLD+'Training time: '+"{:10.4f}".format(time()-start)+' s'+color.ENDC)
-		save_model(model, optimizer, scheduler, e, accuracy_list)
-		plot_accuracies(accuracy_list, f'{args.model}_{args.dataset}')
-
-	### Testing phase
-	torch.zero_grad = True
-	model.eval()
-	print(f'{color.HEADER}Testing {args.model} on {args.dataset}{color.ENDC}')
-	loss, y_pred = backprop(0, model, testD, testO, optimizer, scheduler, training=False)
-
-	### Plot curves
-	if not args.test:
-		if 'TranAD' in model.name: testO = torch.roll(testO, 1, 0) 
-		plotter(f'{args.model}_{args.dataset}', testO, y_pred, loss, labels)
-
-	### Scores
-	df = pd.DataFrame()
-	lossT, _ = backprop(0, model, trainD, trainO, optimizer, scheduler, training=False)
-	for i in range(loss.shape[1]):
-		lt, l, ls = lossT[:, i], loss[:, i], labels[:, i]
-		result, pred = pot_eval(lt, l, ls); preds.append(pred)
-		df = df.append(result, ignore_index=True)
-	# preds = np.concatenate([i.reshape(-1, 1) + 0 for i in preds], axis=1)
-	# pd.DataFrame(preds, columns=[str(i) for i in range(10)]).to_csv('labels.csv')
-	lossTfinal, lossFinal = np.mean(lossT, axis=1), np.mean(loss, axis=1)
-	labelsFinal = (np.sum(labels, axis=1) >= 1) + 0
-	result, _ = pot_eval(lossTfinal, lossFinal, labelsFinal)
-	result.update(hit_att(loss, labels))
-	result.update(ndcg(loss, labels))
-	print(df)
-	pprint(result)
-	# pprint(getresults2(df, result))
-	# beep(4)
+			return loss.detach().numpy(), y_pred.d

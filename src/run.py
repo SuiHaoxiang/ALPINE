@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-整合评估脚本 - 结合autop和build功能，主要采用build的评估方法
+Integrated evaluation script - Combines autop and build functionality, primarily using build's evaluation methods
 """
 
 import os
@@ -23,59 +23,59 @@ from SemanticRisk import SemanticRiskCalculator
 with open("config.yaml", "r") as f:
         config = yaml.safe_load(f)
         shared_config = config["shared"]
-# ==================== 配置参数 ====================
+# ==================== Configuration Parameters ====================
 class Config:
-    # 数据参数
+    # Data parameters
     DATA_PATH = "../dataset/SensorData/subset.csv"
     OUTPUT_DIR = "combined_evaluation"
     FEATURES = ["temperature", "humidity"]
     SENSITIVITIES = {"temperature": 0.686, "humidity": 1.3696}
     TRAIN_RATIO = 0.9
     
-    # 隐私参数
+    # Privacy parameters
     DELTA = 1e-6
     C = np.sqrt(2 * np.log(1.25 / DELTA))
     DELTA_F = 1.0
     
-    # 自适应噪声参数
+    # Adaptive noise parameters
     K = 0.2
     E_RATIO = 1.0
     LAM = 0.5
     
-    # 评估参数
+    # Evaluation parameters
     CONF_LEVEL = 0.95
     REPEATS = 5
     
     
-    OU_THETA = 0.2   # OU噪声参数
-    OU_SIGMA = 0.5   # OU噪声强度
-    PRIV_KAPPA = 5.0 # Logistic陡峭度
-    PRIV_S0 = 0.8    # Logistic中心点
-    PRIV_DELTA = 0.7 # 预算幂次惩罚
-    UTIL_RHO = 0.5   # 风险耦合系数
-    UTIL_SIGMA0 = 1.0 # 噪声基准标准差
-    TRANS_ETA = 0.2  # 平滑步长
-    TRANS_GAMMA = 2.0 # 幂次
-    ACTOR_LR = 1e-4  # Actor学习率
-    CRITIC_LR = 1e-3 # Critic学习率
-    BUFFER_SIZE = 100000 # 经验回放缓冲区大小
-    BATCH_SIZE = 64  # 批量大小
-    # 隐私增益超参数
-    PRIV_KAPPA   = 5.0  # Logistic 陡峭度
-    PRIV_S0      = 0.8   # Logistic 中心点
-    PRIV_DELTA   = 0.7   # 预算幂次惩罚
+    OU_THETA = 0.2   # OU noise parameter
+    OU_SIGMA = 0.5   # OU noise intensity
+    PRIV_KAPPA = 5.0 # Logistic steepness
+    PRIV_S0 = 0.8    # Logistic center point
+    PRIV_DELTA = 0.7 # Budget power penalty
+    UTIL_RHO = 0.5   # Risk coupling coefficient
+    UTIL_SIGMA0 = 1.0 # Base noise standard deviation
+    TRANS_ETA = 0.2  # Smoothing step size
+    TRANS_GAMMA = 2.0 # Power
+    ACTOR_LR = 1e-4  # Actor learning rate
+    CRITIC_LR = 1e-3 # Critic learning rate
+    BUFFER_SIZE = 100000 # Experience replay buffer size
+    BATCH_SIZE = 64  # Batch size
+    # Privacy gain hyperparameters
+    PRIV_KAPPA   = 5.0  # Logistic steepness
+    PRIV_S0      = 0.8   # Logistic center point
+    PRIV_DELTA   = 0.7   # Budget power penalty
 
-    # 效用损失超参数
-    UTIL_RHO     = 0.5   # 风险耦合系数
-    UTIL_SIGMA0  = 1.0   # 噪声基准标准差
+    # Utility loss hyperparameters
+    UTIL_RHO     = 0.5   # Risk coupling coefficient
+    UTIL_SIGMA0  = 1.0   # Base noise standard deviation
 
-    # 非线性平滑状态转移超参数
-    TRANS_ETA    = 0.2   # 平滑步长
-    TRANS_GAMMA  = 2.0   # 幂次
+    # Nonlinear smooth state transition hyperparameters
+    TRANS_ETA    = 0.2   # Smoothing step size
+    TRANS_GAMMA  = 2.0   # Power
 
-# ==================== 自编码器模型 ====================
+# ==================== Autoencoder Model ====================
 class Autoencoder1D(nn.Module):
-    """从autop.py继承的自编码器模型"""
+    """Autoencoder model inherited from autop.py"""
     def __init__(self):
         super().__init__()
         self.encoder = nn.Sequential(
@@ -91,8 +91,8 @@ class Autoencoder1D(nn.Module):
         return self.decoder(self.encoder(x))
 
 def train_autoencoder(data, epochs=200, lr=1e-3):
-    """训练自编码器"""
-    model = Autoencoder1D()  # 强制使用CPU
+    """Train autoencoder"""
+    model = Autoencoder1D()  # Force using CPU
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.MSELoss()
     
@@ -108,16 +108,16 @@ def train_autoencoder(data, epochs=200, lr=1e-3):
     
     return model
 
-# ==================== 主要评估类 ====================
+# ==================== Main Evaluator Class ====================
 class PrivacyEvaluator:
     def __init__(self, actor_model_path=None):
-        """初始化评估器"""
+        """Initialize evaluator"""
         os.makedirs(Config.OUTPUT_DIR, exist_ok=True)
         self.actor = self._load_actor(actor_model_path) if actor_model_path else None
         self.z_score = stats.norm.ppf((1 + Config.CONF_LEVEL) / 2)
         
     def _load_actor(self, model_path):
-        """加载预训练的Actor模型"""
+        """Load pretrained Actor model"""
         class Actor(nn.Module):
             def __init__(self):
                 super().__init__()
@@ -129,7 +129,7 @@ class PrivacyEvaluator:
             
             def forward(self, state):
                 x = self.net(state)
-                return (x + 1) * 2 + 1  # 输出范围[1,5]
+                return (x + 1) * 2 + 1  # Output range [1,5]
         
         actor = Actor()
         if model_path and os.path.exists(model_path):
@@ -137,7 +137,7 @@ class PrivacyEvaluator:
         return actor
     
     def evaluate(self):
-        """执行完整评估流程"""
+        """Execute complete evaluation process"""
         print("="*50)
         print("Starting evaluation process...")
         print(f"Data file: {Config.DATA_PATH}")
@@ -146,19 +146,19 @@ class PrivacyEvaluator:
         print("Risk levels: dynamic calculation based on combined risk")
         print("="*50)
         
-        # 加载数据
+        # Load data
         df = pd.read_csv(Config.DATA_PATH)
         print(f"Successfully loaded data, total samples: {len(df)}")
         n_train = int(len(df) * Config.TRAIN_RATIO)
         train_data = df[Config.FEATURES].iloc[:n_train].values
         test_data = df[Config.FEATURES].iloc[n_train:].values
         
-        # 准备结果容器
+        # Prepare result container
         results = []
         process = psutil.Process(os.getpid())
         base_mem = process.memory_info().rss
         
-        # 初始化风险计算器
+        # Initialize risk calculators
         risk_calculator = RiskCalculator()
         channel_risk_calculator = ChannelRisk()
         calculator = SemanticRiskCalculator(w1=0.5, w2=0.5, window_size=5)
@@ -170,7 +170,7 @@ class PrivacyEvaluator:
         r_semantic_values = calculator.calculate(semantic_df, use_columns)
 
         
-        # 计算综合风险并评估
+        # Calculate combined risk and evaluate
         for i in range(len(test_data)):
             features = channel_test_df[shared_config["features"]].iloc[i].values
             r_channel_values, _ = channel_risk_calculator.process_sample(features)
@@ -226,11 +226,11 @@ class PrivacyEvaluator:
                 # Print feature results in requested format
                 print(f"  {feat}: {record[f'{feat}_hit_rate']*100:.2f}% ± {record[f'{feat}_hit_sem']*100:.2f}%")
             
-            # 记录内存使用
+            # Record memory usage
             record["memory_usage"] = process.memory_info().rss - base_mem
             results.append(record)
         
-        # 保存结果
+        # Save results
         self._save_results(results)
         print("\n" + "="*50)
         print("Evaluation completed! Results saved to", Config.OUTPUT_DIR)
@@ -239,27 +239,27 @@ class PrivacyEvaluator:
         print("="*50)
     
     def _get_epsilon(self, r_risk):
-        """获取隐私预算"""
+        """Get privacy budget"""
         if self.actor:
             with torch.no_grad():
                 return self.actor(torch.FloatTensor([[r_risk]])).item()
-        return 5 - 4 * r_risk  # 线性回退
+        return 5 - 4 * r_risk  # Linear fallback
     
     def _save_results(self, results):
-        """保存评估结果"""
+        """Save evaluation results"""
         df = pd.DataFrame(results)
         
-        # 保存CSV
+        # Save CSV
         df.to_csv(os.path.join(Config.OUTPUT_DIR, "evaluation_results.csv"), index=False)
         
-        # 生成可视化图表
+        # Generate visualization plots
         self._generate_plots(df)
     
     def _generate_plots(self, df):
-        """生成可视化图表"""
+        """Generate visualization plots"""
         plt.figure(figsize=(15, 10))
         
-        # Wasserstein距离
+        # Wasserstein distance
         plt.subplot(2, 2, 1)
         for feat in Config.FEATURES:
             plt.plot(df["risk"], df[f"{feat}_wass"], label=feat.capitalize())
@@ -269,7 +269,7 @@ class PrivacyEvaluator:
         plt.legend()
         plt.grid(True)
         
-        # 命中率
+        # Hit rate
         plt.subplot(2, 2, 2)
         for feat in Config.FEATURES:
             plt.errorbar(df["risk"], df[f"{feat}_hit_rate"], 
@@ -280,7 +280,7 @@ class PrivacyEvaluator:
         plt.legend()
         plt.grid(True)
         
-        # 异常值比例
+        # Anomaly ratio
         plt.subplot(2, 2, 3)
         for feat in Config.FEATURES:
             plt.plot(df["risk"], df[f"{feat}_anomaly"], label=feat.capitalize())
@@ -290,7 +290,7 @@ class PrivacyEvaluator:
         plt.legend()
         plt.grid(True)
         
-        # 内存使用
+        # Memory usage
         plt.subplot(2, 2, 4)
         plt.plot(df["risk"], df["memory_usage"] / (1024**2), 'k-')
         plt.xlabel("Risk Level")
@@ -302,7 +302,7 @@ class PrivacyEvaluator:
         plt.savefig(os.path.join(Config.OUTPUT_DIR, "evaluation_plots.png"), dpi=300)
         plt.close()
 
-# ==================== 主程序 ====================
+# ==================== Main Program ====================
 if __name__ == "__main__":
     evaluator = PrivacyEvaluator(actor_model_path="actor_model.pth")
     evaluator.evaluate()

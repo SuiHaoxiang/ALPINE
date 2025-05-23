@@ -30,19 +30,19 @@ data_dict = {
 
 
 def select_model(args, configs):
-    # 确保传递实际输入维度
+    # Ensure passing actual input dimensions
     if hasattr(args, 'actual_enc_in'):
         configs.actual_enc_in = args.actual_enc_in
         configs.enc_in = args.actual_enc_in
     
-    # 根据model参数选择模型
+    # Select model based on model parameter
     if hasattr(args, 'model'):
         if args.model == 'ModernTCN_3D':
             return ModernTCN_3D(configs).float()
         elif args.model == 'ModernTCN':
             return Model(configs).float()
     
-    # 默认行为：SD/FD数据使用3D模型，其他使用普通模型
+    # Default behavior: use 3D model for SD/FD data, normal model for others
     if 'SD' in args.data or 'FD' in args.data:
         return ModernTCN_3D(configs).float()
     return Model(configs).float()
@@ -78,13 +78,13 @@ def data_provider(args, flag):
         else:
             print(f"{flag} dataset loaded - data provider doesn't support length query")
         def custom_collate(batch):
-            # 处理训练集和测试集的不同情况
+            # Handle different cases for train/test sets
             x = torch.stack([item[0] for item in batch])
             y = None
-            if batch[0][1] is not None:  # 如果有标签
+            if batch[0][1] is not None:  # If labels exist
                 y = torch.stack([item[1] for item in batch])
-            # 去除多余的维度 (batch,1,100,1) -> (batch,100,1)
-            if len(x.shape) == 4:  # 如果是UCR数据格式
+            # Remove redundant dimensions (batch,1,100,1) -> (batch,100,1)
+            if len(x.shape) == 4:  # For UCR data format
                 x = x.squeeze(1)
             return x, y
 
@@ -97,11 +97,11 @@ def data_provider(args, flag):
                 drop_last=drop_last,
                 collate_fn=custom_collate)
         else:
-            # 对于没有实现__len__的数据加载器，使用固定batch数
+            # For data loaders without __len__ implementation, use fixed batch count
             data_loader = DataLoader(
                 data_set,
                 batch_size=batch_size,
-                shuffle=False,  # 不能shuffle因为没有长度信息
+                shuffle=False,  # Cannot shuffle without length information
                 num_workers=args.num_workers,
                 drop_last=False,
                 collate_fn=custom_collate)

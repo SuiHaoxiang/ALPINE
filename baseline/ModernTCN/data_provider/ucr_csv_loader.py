@@ -67,10 +67,10 @@ class UCRCSVDataset(Dataset):
         x = np.float32(self.data[0, index:index+self.win_size, :])  # (win_size, 1)
         y = np.float32(self.labels[0, index:index+self.win_size])   # (win_size,)
         
-        # 调整输出形状为(1, win_size, 1)
-        x = x.reshape(1, -1, 1)  # 添加batch维度
+        # Reshape output to (1, win_size, 1)
+        x = x.reshape(1, -1, 1)  # Add batch dimension
         
-        # 确保输出形状正确
-        assert x.shape == (1, self.win_size, 1), f"数据形状应为(1, {self.win_size}, 1)，实际为{x.shape}"
+        # Ensure correct output shape
+        assert x.shape == (1, self.win_size, 1), f"Data shape should be (1, {self.win_size}, 1), got {x.shape}"
         #print(f"Data sample shape: {x.shape}")
         return torch.from_numpy(x), torch.from_numpy(y)

@@ -11,8 +11,8 @@ data_dict = {
     'PEMS': Dataset_PEMS,
     'custom': Dataset_Custom,
     'FD': Dataset_FD,
-    'SD': Dataset_SD,  # 添加SD数据集支持
-    'UCR': Dataset_UCR  # 添加UCR数据集支持
+    'SD': Dataset_SD,  # Add SD dataset support
+    'UCR': Dataset_UCR  # Add UCR dataset support
 }
 
 
@@ -25,7 +25,7 @@ def data_provider(args, flag):
         drop_last = True
         batch_size = 1  # bsz=1 for evaluation
         freq = args.freq
-        # 对于UCR数据集保留原始data_path
+        # For UCR dataset keep original data_path
         test_data_path = args.data_path if args.data == 'UCR' else \
                         args.data_path.replace('train.csv', 'test.csv') if 'train.csv' in args.data_path else 'test.csv'
         data_set = Data(

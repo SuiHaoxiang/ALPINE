@@ -3,23 +3,23 @@ import os
 from datetime import datetime
 
 def save_metrics_to_csv(model_name, metrics):
-    """将评估指标保存到CSV文件"""
-    # 确保logs目录存在
+    """Save evaluation metrics to CSV file"""
+    # Ensure logs directory exists
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
     
-    # 生成带时间戳的文件名
+    # Generate timestamped filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{timestamp}_{model_name}_metrics.csv"
     filepath = os.path.join(log_dir, filename)
     
-    # CSV文件头
+    # CSV file header
     fieldnames = [
         'timestamp', 'model', 'accuracy', 'precision', 
         'recall', 'f1'
     ]
     
-    # 准备数据行
+    # Prepare data row
     row = {
         'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         'model': model_name,
@@ -30,10 +30,10 @@ def save_metrics_to_csv(model_name, metrics):
        
     }
     
-    # 写入CSV文件
+    # Write to CSV file
     with open(filepath, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerow(row)
     
-    print(f"metrics_log已保存到: {filepath}")
+    print(f"metrics_log saved in: {filepath}")

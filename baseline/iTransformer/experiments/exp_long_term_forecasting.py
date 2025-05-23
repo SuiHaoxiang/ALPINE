@@ -51,11 +51,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     batch_y_mark = batch_y_mark.float().to(self.device)
 
                 # decoder input
-                if self.args.data in ['FD', 'SD']:  # 异常检测任务特殊处理
-                    # 对于异常检测任务，直接使用输入序列作为解码器输入
+                if self.args.data in ['FD', 'SD']:  # Special handling for anomaly detection task
+                    # For anomaly detection, use input sequence directly as decoder input
                     dec_inp = torch.zeros_like(batch_x).float().to(self.device)
-                else:  # 时间序列预测任务
-                    # 确保batch_y是3D张量 [batch_size, seq_len, features]
+                else:  # Time series forecasting task
+                    # Ensure batch_y is 3D tensor [batch_size, seq_len, features]
                     if batch_y.dim() == 1:
                         batch_y = batch_y.unsqueeze(-1).unsqueeze(-1)  # [batch_size, 1, 1]
                     dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
@@ -63,27 +63,27 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 # encoder - decoder
                 if self.args.use_amp:
                     with torch.cuda.amp.autocast():
-                        if self.args.data in ['FD', 'SD']:  # 异常检测任务特殊处理
-                            # 为异常检测任务创建空的时间标记
+                        if self.args.data in ['FD', 'SD']:  # Special handling for anomaly detection task
+                            # Create empty time stamps for anomaly detection
                             empty_mark = torch.zeros_like(batch_x[:,:,0:1])  # [batch_size, seq_len, 1]
                             if self.args.output_attention:
                                 outputs = self.model(batch_x, empty_mark, batch_x, empty_mark)[0]
                             else:
                                 outputs = self.model(batch_x, empty_mark, batch_x, empty_mark)
-                        else:  # 时间序列预测任务
+                        else:  # Time series forecasting task
                             if self.args.output_attention:
                                 outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
                             else:
                                 outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
                 else:
-                    if self.args.data in ['FD', 'SD']:  # 异常检测任务特殊处理
-                        # 为异常检测任务创建空的时间标记
+                    if self.args.data in ['FD', 'SD']:  # Special handling for anomaly detection task
+                        # Create empty time stamps for anomaly detection
                         empty_mark = torch.zeros_like(batch_x[:,:,0:1])  # [batch_size, seq_len, 1]
                         if self.args.output_attention:
                             outputs = self.model(batch_x, empty_mark, batch_x, empty_mark)[0]
                         else:
                             outputs = self.model(batch_x, empty_mark, batch_x, empty_mark)
-                    else:  # 时间序列预测任务
+                    else:  # Time series forecasting task
                         if self.args.output_attention:
                             outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
                         else:
@@ -268,13 +268,13 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     if test_data.scale and self.args.inverse:
                         shape = input.shape
                         input = test_data.inverse_transform(input.squeeze(0)).reshape(shape)
-                    # 异常检测任务特殊处理维度
+                    # Special dimension handling for anomaly detection
                     if self.args.data in ['FD', 'SD', 'UCR']:
                         if self.args.data == 'UCR':
                             gt = true[0, :, -1] if true.ndim == 3 else true[0, :]
                             pd = pred[0, :, -1] if pred.ndim == 3 else pred[0, :]
                         else:
-                            # 确保输入和输出的维度一致
+                            # Ensure input and output dimensions match
                             input_flat = input[0, :, -1].reshape(-1)
                             true_flat = true[0, -1:].reshape(-1)
                             pred_flat = pred[0, -1:].reshape(-1)
@@ -297,14 +297,14 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-        # 异常检测任务输出分类指标
+        # Output classification metrics for anomaly detection
         if self.args.data in ['FD', 'SD']:
             from sklearn.metrics import precision_score, recall_score, f1_score
-            # 获取每个样本最后一个时间点的预测和真实标签
+            # Get predictions and true labels from last time point
             pred_labels = (preds[:, -1, -1] > 0.8).astype(int)
             true_labels = trues[:, -1, -1].astype(int)
-            # 确保样本数量一致
-            assert len(pred_labels) == len(true_labels), f"样本数量不匹配: pred {len(pred_labels)} vs true {len(true_labels)}"
+            # Ensure sample counts match
+            assert len(pred_labels) == len(true_labels), f"Sample count mismatch: pred {len(pred_labels)} vs true {len(true_labels)}"
             precision = precision_score(true_labels, pred_labels, zero_division=0)
             recall = recall_score(true_labels, pred_labels, zero_division=0)
             f1 = f1_score(true_labels, pred_labels, zero_division=0)

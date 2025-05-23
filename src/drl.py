@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib import font_manager
 
 # ----------------------
-# 超参数配置
+# Hyperparameter configuration
 # ----------------------
 
 font_path = 'calibri.ttf'
@@ -15,49 +15,49 @@ font_manager.fontManager.addfont(font_path)
 
 plt.rcParams['font.family']         = 'sans-serif'
 plt.rcParams['font.sans-serif']     = ['Calibri']
-plt.rcParams['font.weight']         = 'bold'        # 所有文字加粗
-plt.rcParams['axes.titleweight']    = 'bold'        # 坐标轴标题加粗
-plt.rcParams['axes.labelweight']    = 'bold'        # 坐标轴标签加粗
-plt.rcParams['text.color']          = 'black'       # 确保文字够深
+plt.rcParams['font.weight']         = 'bold'        # Bold all text
+plt.rcParams['axes.titleweight']    = 'bold'        # Bold axis titles
+plt.rcParams['axes.labelweight']    = 'bold'        # Bold axis labels
+plt.rcParams['text.color']          = 'black'       # Ensure text is dark enough
 plt.rcParams['xtick.color']         = 'black'
 plt.rcParams['ytick.color']         = 'black'
-plt.rcParams['lines.linewidth']     = 2.0           # 折线更粗些，提高对比度
-plt.rcParams['grid.color']          = '#666666'     # 网格也深一点
+plt.rcParams['lines.linewidth']     = 2.0           # Thicker lines for better contrast
+plt.rcParams['grid.color']          = '#666666'     # Darker grid lines
 plt.rcParams['grid.linestyle']      = '--'
 plt.rcParams['grid.linewidth']      = 0.5
 
 class Config:
-    STATE_DIM    = 1     # 状态维度 (风险值 rrisk)
-    ACTION_DIM   = 1     # 动作维度 (隐私预算 epsilon)
-    EPSILON_MIN  = 1.0   # 最小隐私预算
-    EPSILON_MAX  = 5.0   # 最大隐私预算
-    ALPHA        = 5     # 隐私增益权重
-    BETA         = 20    # 效用损失权重
-    GAMMA        = 0.99  # 折扣因子
-    TAU          = 0.005 # 软更新系数
-    ACTOR_LR     = 1e-4  # Actor 学习率
-    CRITIC_LR    = 1e-3  # Critic 学习率
+    STATE_DIM    = 1     # State dimension (risk value rrisk)
+    ACTION_DIM   = 1     # Action dimension (privacy budget epsilon)
+    EPSILON_MIN  = 1.0   # Minimum privacy budget
+    EPSILON_MAX  = 5.0   # Maximum privacy budget
+    ALPHA        = 5     # Privacy gain weight
+    BETA         = 20    # Utility loss weight
+    GAMMA        = 0.99  # Discount factor
+    TAU          = 0.005 # Soft update coefficient
+    ACTOR_LR     = 1e-4  # Actor learning rate
+    CRITIC_LR    = 1e-3  # Critic learning rate
     BUFFER_SIZE  = 100000
     BATCH_SIZE   = 64
-    OU_THETA     = 0.2   # OU 噪声参数
-    OU_SIGMA     = 0.5   # OU 噪声强度
+    OU_THETA     = 0.2   # OU noise parameter
+    OU_SIGMA     = 0.5   # OU noise intensity
 
-    # 隐私增益超参数
-    PRIV_KAPPA   = 5.0   # Logistic 陡峭度
-    PRIV_S0      = 0.7   # Logistic 中心点
-    PRIV_DELTA   = 0.7   # 预算幂次惩罚
+    # Privacy gain hyperparameters
+    PRIV_KAPPA   = 5.0   # Logistic steepness
+    PRIV_S0      = 0.7   # Logistic center point
+    PRIV_DELTA   = 0.7   # Budget power penalty
 
-    # 效用损失超参数
-    UTIL_RHO     = 0.5   # 风险耦合系数
-    UTIL_SIGMA0  = 1.0   # 噪声基准标准差
+    # Utility loss hyperparameters
+    UTIL_RHO     = 0.5   # Risk coupling coefficient
+    UTIL_SIGMA0  = 1.0   # Base noise standard deviation
 
-    # 非线性平滑状态转移超参数
-    TRANS_ETA    = 0.2   # 平滑步长
-    TRANS_GAMMA  = 2.0   # 幂次
+    # Nonlinear smooth state transition hyperparameters
+    TRANS_ETA    = 0.2   # Smoothing step size
+    TRANS_GAMMA  = 2.0   # Power
 
 
 # ----------------------
-# Actor网络 (输出1–5的隐私预算)
+# Actor network (outputs privacy budget between 1-5)
 # ----------------------
 class Actor(nn.Module):
     def __init__(self):
@@ -70,7 +70,7 @@ class Actor(nn.Module):
             nn.LayerNorm(64),
             nn.ELU(),
             nn.Linear(64, Config.ACTION_DIM),
-            nn.Tanh()  # 输出范围[-1,1]
+            nn.Tanh()  # Output range [-1,1]
         )
     
     def forward(self, state):
@@ -80,7 +80,7 @@ class Actor(nn.Module):
 
 
 # ----------------------
-# Critic网络 (评估Q值)
+# Critic network (evaluates Q value)
 # ----------------------
 class Critic(nn.Module):
     def __init__(self):
@@ -98,7 +98,7 @@ class Critic(nn.Module):
 
 
 # ----------------------
-# 改进的OU噪声生成器
+# Improved OU noise generator
 # ----------------------
 class OUNoise:
     def __init__(self):
@@ -113,11 +113,11 @@ class OUNoise:
     def sample(self):
         dx = self.theta * (self.mu - self.state) + self.sigma * np.random.randn(Config.ACTION_DIM)
         self.state += dx
-        return self.state * 0.5  # 缩放
+        return self.state * 0.5  # Scaling
 
 
 # ----------------------
-# Replay Buffer
+# Replay buffer
 # ----------------------
 class ReplayBuffer:
     def __init__(self):
@@ -153,7 +153,7 @@ class ReplayBuffer:
 
 
 # ----------------------
-# DDPG 智能体 (改进版)
+# DDPG agent (improved version)
 # ----------------------
 class DDPGAgent:
     def __init__(self):
@@ -184,7 +184,7 @@ class DDPGAgent:
             return None, None
 
         s, a, r, s_next = self.buffer.sample()
-        # Critic 更新
+        # Critic update
         q_curr = self.critic(s, a)
         with torch.no_grad():
             a_next   = self.actor_target(s_next)
@@ -195,14 +195,14 @@ class DDPGAgent:
         nn.utils.clip_grad_norm_(self.critic.parameters(), 1.0)
         self.critic_optim.step()
 
-        # Actor 更新
+        # Actor update
         loss_pi = -self.critic(s, self.actor(s)).mean()
         self.actor_optim.zero_grad()
         loss_pi.backward()
         nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
         self.actor_optim.step()
 
-        # 软更新
+        # Soft update
         with torch.no_grad():
             for p, tp in zip(self.actor.parameters(), self.actor_target.parameters()):
                 tp.data.copy_(Config.TAU * p.data + (1 - Config.TAU) * tp.data)
@@ -213,7 +213,7 @@ class DDPGAgent:
 
 
 # ----------------------
-# 非线性平滑状态转移
+# Nonlinear smooth state transition
 # ----------------------
 def transition_rrisk(rrisk, epsilon, noise_scale=0.03):
     target = (Config.EPSILON_MAX - epsilon) / (Config.EPSILON_MAX - Config.EPSILON_MIN)
@@ -224,23 +224,23 @@ def transition_rrisk(rrisk, epsilon, noise_scale=0.03):
 
 
 # ----------------------
-# 改进的奖励函数
+# Improved reward function
 # ----------------------
 def calculate_reward(rrisk, epsilon):
-    # 隐私增益
+    # Privacy gain
     logistic      = 1.0 / (1.0 + np.exp(-Config.PRIV_KAPPA * (rrisk - Config.PRIV_S0)))
     budget_factor = ((Config.EPSILON_MAX - epsilon) /
                      (Config.EPSILON_MAX - Config.EPSILON_MIN)) ** Config.PRIV_DELTA
     g_priv = Config.ALPHA * logistic * budget_factor
 
-    # 效用损失
+    # Utility loss
     util_penalty = Config.BETA * (1 - Config.UTIL_RHO * rrisk) * (Config.UTIL_SIGMA0 / epsilon) ** 2
 
     return float(g_priv - util_penalty)
 
 
 # ----------------------
-# 训练 & 可视化
+# Training & visualization
 # ----------------------
 def train(episodes=600, steps_per_ep=25):
     agent = DDPGAgent()
@@ -279,7 +279,7 @@ def train(episodes=600, steps_per_ep=25):
     return agent, history
 
 def visualize(agent, history, max_steps=10000):
-    # ———— 全局字体放大 ————
+        # Global font enlargement
     plt.rcParams['font.size']        = 16
     plt.rcParams['axes.labelsize']   = 18
     plt.rcParams['axes.titlesize']   = 20
@@ -290,12 +290,12 @@ def visualize(agent, history, max_steps=10000):
     plt.rcParams['grid.linewidth']   = 0.7
     plt.rcParams['grid.color']       = '#444444'
 
-    # 深色调配色
+    # Dark color scheme
     policy_color = '#003f5c'
     hist_color   = '#d62728'
 
-    # —— 策略曲线（左图） ——
-    plt.figure(figsize=(12, 5))  # 2 图结构
+        # Policy curve (left plot)
+    plt.figure(figsize=(12, 5))  # 2 plot structure
     plt.subplot(1, 2, 1)
     rr_all = np.linspace(0, 1, 100).reshape(-1, 1).astype(np.float32)
     with torch.no_grad():
@@ -306,21 +306,21 @@ def visualize(agent, history, max_steps=10000):
     plt.title('Policy')
     plt.grid(True)
 
-    # —— 奖励分布（右图） ——
+        # Reward distribution (right plot)
     rewards = history['reward'][:max_steps]
     plt.subplot(1, 2, 2)
     plt.hist(rewards, bins=40, density=True, color=hist_color, alpha=0.8)
     plt.xlabel('Reward')
     plt.ylabel('Frequency')
     plt.title('Reward Distribution')
-    plt.xlim([-5, max(rewards) + 0.5])  # 设置横坐标从 -5 开始
+    plt.xlim([-5, max(rewards) + 0.5])  # Set x-axis from -5
     plt.grid(True)
 
     plt.tight_layout()
     plt.show()
     plt.savefig('1_modified_policy_reward.png', dpi=150)
 
-    # —— Actor & Critic 损失曲线（前 max_steps 步更新） ——
+        # Actor & Critic loss curves (first max_steps updates)
     loss_q  = history['loss_q'][:max_steps]
     loss_pi = history['loss_pi'][:max_steps]
     plt.figure(figsize=(8, 5))
@@ -350,7 +350,7 @@ if __name__ == "__main__":
     elapsed_time = time.time() - start_time
     print(f"DDPG training completed in {elapsed_time:.2f} seconds.")
 
-    # 保存 Actor 模型
+    # Save Actor model
     model_path = "actor_model.pth"
     torch.save(agent.actor.state_dict(), model_path)
     print(f"Actor model saved to {model_path}")

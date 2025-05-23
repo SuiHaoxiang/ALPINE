@@ -14,7 +14,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
         
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
-        # 修改输出层为二分类
+        # Modify output layer for binary classification
         in_features = model.projector.in_features if hasattr(model.projector, 'in_features') else model.projector.weight.shape[1]
         model.projector = nn.Sequential(
             nn.Linear(in_features, 1),
@@ -33,12 +33,12 @@ class Exp_Anomaly_Detection(Exp_Basic):
         return optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
 
     def _select_criterion(self):
-        return nn.MSELoss()  # 使用MSE损失进行序列重构
+        return nn.MSELoss()  # Use MSE loss for sequence reconstruction
 
     def train(self, setting):
         import torch.nn.functional as F
         train_data, train_loader = self._get_data(flag='train')
-        # 异常检测任务，验证集也应使用正常数据
+        # For anomaly detection, validation set should also use normal data
         vali_data, vali_loader = self._get_data(flag='train')  
         
         path = os.path.join(self.args.checkpoints, setting)
@@ -60,18 +60,18 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 
                 outputs = self.model(batch_x, batch_x_mark, None, None)
                 if self.args.is_training == 1:
-                    # 训练时使用MSE重构损失(仅正常数据)
+                    # Use MSE reconstruction loss (normal data only)
                     loss = F.mse_loss(outputs, batch_x)
                 else:
-                    # 测试时才接触异常数据
+                    # Only use anomaly data during testing
                     recon_error = torch.mean(F.mse_loss(outputs, batch_x, reduction='none'), dim=[1,2])
-                    # 将重构误差作为异常分数
+                    # Use reconstruction error as anomaly score
                     anomaly_scores = recon_error.detach().cpu().numpy()
-                    # 计算评估指标
+                    # Calculate evaluation metrics
                     from sklearn.metrics import roc_auc_score
                     auc = roc_auc_score(batch_y.cpu().numpy(), anomaly_scores)
                     print(f'Test AUC: {auc:.4f}')
-                    loss = torch.tensor(auc)  # 使用AUC作为评估指标
+                    loss = torch.tensor(auc)  # Use AUC as evaluation metric
                 train_loss.append(loss.item())
                 
                 loss.backward()
@@ -99,7 +99,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 batch_y = batch_y.float().to(self.device)
                 
                 outputs = self.model(batch_x, batch_x_mark, None, None)
-                loss = criterion(outputs, batch_x)  # 比较重构输出和原始输入
+                loss = criterion(outputs, batch_x)  # Compare reconstruction output with original input
                 total_loss.append(loss.item())
                 
         return np.average(total_loss)
@@ -110,7 +110,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
         threshold = getattr(self.args, 'anomaly_threshold', 0.4)
         print(f"\nUsing anomaly threshold: {threshold:.4f} (set via --anomaly_threshold)")
         
-        # 开始计时
+        # Start timing
         start_time = time.time()
         
         self.model.eval()
@@ -123,7 +123,7 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 batch_y = batch_y.float().to(self.device)
                 
                 outputs = self.model(batch_x, batch_x_mark, None, None)
-                # 获取重构误差作为异常分数
+                # Get reconstruction error as anomaly score
                 recon_error = torch.mean(F.mse_loss(outputs, batch_x, reduction='none'), dim=[1,2])
                 pred = recon_error.cpu().numpy()  # [batch_size]
                 true = batch_y.squeeze().cpu().numpy()  # [batch_size]
@@ -131,12 +131,12 @@ class Exp_Anomaly_Detection(Exp_Basic):
                 preds.append(pred)
                 trues.append(true)
         
-        # 计算评估指标
+        # Calculate evaluation metrics
         from sklearn.metrics import roc_auc_score, f1_score, precision_score, recall_score
         y_true = np.hstack(trues) if len(trues) > 0 else np.array([])
         y_pred = np.hstack(preds) if len(preds) > 0 else np.array([])
         
-        # 强制二分类模式，使用args中的阈值参数，默认为0.5
+        # Force binary classification mode, using threshold from args (default 0.5)
         threshold = getattr(self.args, 'anomaly_threshold', 0.4)
         y_pred_binary = y_pred > threshold
         auc = roc_auc_score(y_true, y_pred)
@@ -152,13 +152,13 @@ class Exp_Anomaly_Detection(Exp_Basic):
         print(f"Precision: {precision:.4f} | Recall: {recall:.4f}")
         print(f"Regression Metrics - mse:{np.mean(y_pred):.4f}, mae:{np.median(y_pred):.4f}")
         print("===============================")
-        # 计算每样本推理时间(毫秒)
+        # Calculate inference time per sample (ms)
         sample_count = len(y_true)
         total_time_ms = (time.time() - start_time) * 1000
         per_sample_time = total_time_ms / sample_count if sample_count > 0 else 0
         
-        print(f"\n=== 推理时间统计 ===")
-        print(f"每样本推理时间: {per_sample_time:.6f}毫秒")
+        print(f"\n=== Inference time statistics ===")
+        print(f"Inference time per sample: {per_sample_time:.6f}ms")
         print("==================")
         
         return {

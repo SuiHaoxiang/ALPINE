@@ -1,4 +1,4 @@
-# ALPINE: Adaptive Lightweight Privacy-preserving INtelligence for Edge Crowdsensing
+# ALPINE: A Lightweight and Adaptive Privacy-decision Agent Framework for Dynamic Edge Crowdsensing
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -7,7 +7,7 @@ This repository contains the implementation for our paper *"A Lightweight and Ad
 ## Introduction
 In **mobile edge crowdsensing (MECS) systems**, large-scale user-generated data is continuously collected and transmitted across dynamic, resource-constrained environments, posing significant privacy risks. Static privacy-preserving methods often fail to adapt to real-time threats. To address this, we propose **ALPINE**, **a lightweight and adaptive privacy-decision agent framework** that enables terminal devices to autonomously adjust differential privacy levels using a deep deterministic policy gradient (DDPG) algorithm.
 
-![alt text](<plot/Formatting_Instructions_For_NeurIPS_2025 (6)_Page2_Image1.jpg>)
+![alt text](<plot/Formatting_Instructions_For_NeurIPS_2025.png>)
 ## Key Features
 - 🛡️ **Adaptive Privacy Protection**: Dynamically adjusts differential privacy levels based on real-time risk assessment
 - 🤖 **DDPG-based Control**: Uses deep reinforcement learning for optimal privacy-utility tradeoff
@@ -24,7 +24,7 @@ pip install -r requirements.txt
 
 ## Quickstart
 ### Training
-To train a new Actor model, run:
+To train a new DDPG model, run:
 ```python
 cd src/
 python drl.py
@@ -60,7 +60,15 @@ We use three types of datasets:
    - `dataset/SensorData/`: Intel Lab sensor dataset
 
 ## Results
-![alt text](plot/results.png)
+Key experimental results:
+- ![Privacy-Utility Analysis](<plot/Data Utility and Privacy Preservation Analysis.png>)  
+  Shows the tradeoff between data utility and privacy protection under different risk levels
+
+- ![- !(plot/Performance of DDPG.png)  ](<plot/Performance of DDPG.png>)
+  Demonstrates the convergence and reward performance of our DDPG agent
+
+- ![Model Comparison](plot/results.png)  
+  Compares ALPINE's Coordination Model performance with baseline methods across all datasets
 ## Citation
 If you use this code in your research, please cite our paper:
 ```bibtex

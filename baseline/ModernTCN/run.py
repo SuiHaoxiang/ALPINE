@@ -135,7 +135,7 @@ torch.manual_seed(fix_seed)
 np.random.seed(fix_seed)
 
 
-args.use_gpu = False  # 强制使用CPU模式
+args.use_gpu = False  
 
 if args.use_gpu and args.use_multi_gpu:
     args.dvices = args.devices.replace(' ', '')
@@ -148,7 +148,7 @@ print(args)
 if __name__ == '__main__':
 
     if args.task_name == 'anomaly_detection':
-        print("当前配置为异常检测任务，如需分类任务请使用classification目录下的脚本")
+        
         Exp = Exp_Anomaly_Detection
 
     if args.is_training:
