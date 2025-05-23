@@ -61,14 +61,16 @@ We use three types of datasets:
 
 ## Results
 Key experimental results:
-- ![Privacy-Utility Analysis](<plot/Data Utility and Privacy Preservation Analysis.png>)  
-  Shows the tradeoff between data utility and privacy protection under different risk levels
-
-- ![- !(plot/Performance of DDPG.png)  ](<plot/Performance of DDPG.png>)
-  Demonstrates the convergence and reward performance of our DDPG agent
 
 - ![Model Comparison](plot/results.png)  
   Compares ALPINE's Coordination Model performance with baseline methods across all datasets
+
+- ![- !(plot/Performance of DDPG.png)  ](<plot/Performance of DDPG.png>)
+  Demonstrates the convergence and reward performance of our DDPG agent
+  
+- ![Privacy-Utility Analysis](<plot/Data Utility and Privacy Preservation Analysis.png>)  
+  Shows the tradeoff between data utility and privacy protection under different risk levels
+
 ## Citation
 If you use this code in your research, please cite our paper:
 ```bibtex
